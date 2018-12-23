@@ -8,10 +8,10 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/pcman75/hoembridge-volumio.git"
+    "url": "https://github.com/pcman75/homebridge-volumio.git"
   },
   "bugs": {
-    "url": "https://github.com/pcman75/hoembridge-volumio/issues"
+    "url": "https://github.com/pcman75/homebridge-volumio/issues"
   },
   "engines": {
     "node": ">=0.12.0",
