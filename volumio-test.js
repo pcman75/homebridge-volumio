@@ -1,18 +1,32 @@
-const http = require('http');
+var io=require('socket.io-client');
+var socket= io.connect('http://living.local');
 
-http.get('http://living.local/api/v1/getstate', (resp) => {
-  let data = '';
 
-  // A chunk of data has been recieved.
-  resp.on('data', (chunk) => {
-    data += chunk;
-  });
+//Report successful connection
+socket.on('connect', function () {
+      console.log('Client Connected');
+    });
 
-  // The whole response has been received. Print out the result.
-  resp.on('end', () => {
-    console.log(JSON.parse(data).title);
-  });
+//Report disconnection
+socket.on('disconnect', function () {
+          console.log('Client Disconnected');
+    });
 
-}).on("error", (err) => {
-  console.log("Error: " + err.message);
-});
+//Notify on player state changes, this includes volume changes, songs etc
+socket.on('pushState', function (data) {
+              console.log(data);
+        });
+
+//Notify just the volume value
+socket.on('pushState', function (data) {
+              console.log(data.volume);
+        });
+
+//Set Volume to 15
+socket.emit('volume', 15);
+
+//Increase Volume by value specified by "On click Volume Change", default is 10
+//socket.emit('volume', '+');
+
+//Decrease Volume by value specified by "On click Volume Change", default is 10
+//socket.emit('volume', '-');

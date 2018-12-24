@@ -4,11 +4,10 @@
         "username": "CC:22:3D:E3:83:61",
         "pin": "031-48-361"
     },
-    "accesories": [
+    "accessories": [
         {
-            "accessory": "homebridge-volumio",
-            "getUrl": "http://192.168.0.10/api/status",
-            "postUrl": "http://192.168.0.10/api/order"
+            "accessory": "volumio",
+            "name": "living"
         }
     ]
 }
