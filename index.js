@@ -1,9 +1,7 @@
 "use strict";
 
-// "accessories": [{"accessory": "VOLUMIO"}]
-
 let Service, Characteristic;
-let request = require("request");
+let request = require("request").defaults({json: true});
 
 module.exports.VolumioAccessory;
 
@@ -17,16 +15,11 @@ module.exports = function (homebridge) {
  class VolumioAccessory {
     constructor(log, config) {
         this.log = log;
-        this.name = config.name || "Volumio";
-        this.stateUrl = "http://" + this.name.toLowerCase() + ".local/api/v1/getstate";
-
-        this.volume = {};
-        this.mute = {};
-
-        let url0 = "http://" + this.name.toLowerCase() + ".local/api/v1/commands/?";
-        this.volume.setUrl = url0 + "cmd=volume&volume=%s";
-        this.mute.onUrl = url0 + "cmd=volume&volume=mute";
-        this.mute.offUrl = url0 + "cmd=volume&volume=unmute";
+        this.name = (config.name || "Volumio").toLowerCase();
+        this.stateUrl = "http://" + this.name + ".local/api/v1/getstate";
+        this.playCommandUrl = "http://" + this.name + ".local/api/v1/commands/?cmd=play";
+        this.stopCommandUrl = "http://" + this.name + ".local/api/v1/commands/?cmd=stop";
+        this.volumeCommandUrl = "http://" + this.name + ".local/api/v1/commands/?cmd=volume&volume=";
     }
 
     getServices() {
@@ -51,50 +44,48 @@ module.exports = function (homebridge) {
             .addCharacteristic(new Characteristic.Brightness())
             .on("get", this.getVolume.bind(this))
             .on("set", this.setVolume.bind(this));
+
         return [informationService, lightBulbService];
     }
 
     getPlayState(callback) {
-        this._httpRequest(this.stateUrl, "", "GET", function (error, response, body) {
+        request(this.stateUrl, (error, response, body) => {
             if (error) {
-                this.log("getMuteState() failed: %s", error.message);
+                this.log("getPlayState() failed: %s", error.message);
                 callback(error);
             }
             else if (response.statusCode !== 200) {
-                this.log("getMuteState() request returned http error: %s", response.statusCode);
+                this.log("getPlayState() request returned http error: %s", response.statusCode);
                 callback(new Error("getMuteState() returned http error " + response.statusCode));
             }
             else {
-                let obj = JSON.parse(body);
-                let muted = (obj.status == 'play');
-                this.log("Speaker status is currently %s", muted ? "play" : "not play");
-                callback(null, muted);
+                this.log("getPlayState()" + body.status);
+                callback(null, body.status === 'play');
             }
-        }.bind(this));
+        });
     }
 
-    setPlayState(muted, callback) {
-        let url = muted ? this.mute.onUrl : this.mute.offUrl;
+    setPlayState(on, callback) {
+        let url = on ? this.playCommandUrl : this.stopCommandUrl;
 
-        this._httpRequest(url, "", "GET", function (error, response, body) {
+        request(url, (error, response, body) => {
             if (error) {
                 this.log("setPlayState() failed: %s", error.message);
                 callback(error);
             }
             else if (response.statusCode !== 200) {
-                this.log("setMuteState() request returned http error: %s", response.statusCode);
-                callback(new Error("setMuteState() returned http error " + response.statusCode));
+                this.log("setPlayState() request returned http error: %s", response.statusCode);
+                callback(new Error("setPlayState() returned http error " + response.statusCode));
             }
             else {
-                this.log("setPlayState() successfully set mute state to %s", muted ? "play" : "stop");
-
+                this.log("setPlayState() successfully: ", body.response);
                 callback(undefined, body);
             }
-        }.bind(this));
+        });
     }
 
     getVolume(callback) {
-        this._httpRequest(this.stateUrl, "", "GET", function (error, response, body) {
+        request(this.stateUrl, (error, response, body) => {
             if (error) {
                 this.log("getVolume() failed: %s", error.message);
                 callback(error);
@@ -104,47 +95,29 @@ module.exports = function (homebridge) {
                 callback(new Error("getVolume() returned http error " + response.statusCode));
             }
             else {
-                let obj = JSON.parse(body);
-                let volume = parseInt(obj.volume);
-                this.log("Speaker's volume is at  %s %", volume);
+                this.log("Volume is at  %s %", body.volume);
 
-                callback(null, volume);
+                callback(null, body.volume);
             }
-        }.bind(this));
+        });
     }
 
     setVolume(volume, callback) {
-        let url = this.volume.setUrl.replace("%s", volume);
+        let url = this.volumeCommandUrl + volume;
 
-        this._httpRequest(url, "", "GET", function (error, response, body) {
+        request(url, (error, response, body) => {
             if (error) {
                 this.log("setVolume() failed: %s", error.message);
                 callback(error);
             }
             else if (response.statusCode !== 200) {
-                this.log("setVolume() request returned http error: %s", response.statusCode);
-                callback(new Error("setVolume() returned http error " + response.statusCode));
+                this.log("setVolume() request returned error: %s", response.statusCode);
+                callback(new Error("setVolume() returned error " + response.statusCode));
             }
             else {
-                this.log("setVolume() successfully set volume to %s", volume);
-
-                callback(undefined, body);
+                this.log("setVolume() successfully set volume to " + volume);
+                callback(undefined, volume);
             }
-        }.bind(this));
-    }
-
-    _httpRequest(url, body, method, callback) {
-        return request(
-            {
-                url: url,
-                body: body,
-                method: method,
-                rejectUnauthorized: false
-            },
-            function (error, response, body) {
-                callback(error, response, body);
-            }
-        );
-
+        });
     }
 }
