@@ -1,24 +1,10 @@
-"use strict";
-
-// "accessories": [{"accessory": "VOLUMIO"}]
-
-let Service, Characteristic;
-let request = require("request");
-
-module.exports.VolumioAccessory;
-
-module.exports = function (homebridge) {
-    console.log("Loading homebridge volumio. homebridge API version: " + homebridge.version);
-    Service = homebridge.hap.Service;
-    Characteristic = homebridge.hap.Characteristic;
-    homebridge.registerAccessory("homebridge-volumio", "volumio", VolumioAccessory);
-}
 
  class VolumioAccessory {
     constructor(log, config) {
         this.log = log;
         this.name = config.name || "Volumio";
         this.stateUrl = "http://" + this.name.toLowerCase() + ".local/api/v1/getstate";
+        this.requests = [];
 
         this.volume = {};
         this.mute = {};
@@ -27,6 +13,21 @@ module.exports = function (homebridge) {
         this.volume.setUrl = url0 + "cmd=volume&volume=%s";
         this.mute.onUrl = url0 + "cmd=volume&volume=mute";
         this.mute.offUrl = url0 + "cmd=volume&volume=unmute";
+    }
+
+    clearRequests() {
+        if (this.requests.length > 0) {
+            this.log('cleaning %s requests', this.requests.length);
+        }
+        this.requests.forEach((req) => {
+            req.abort();
+        });
+        this.requests = [];
+    }
+
+    identify(callback) {
+        this.log("Identify requested!");
+        callback();
     }
 
     getServices() {
@@ -114,9 +115,10 @@ module.exports = function (homebridge) {
     }
 
     setVolume(volume, callback) {
+        this.clearRequests();
         let url = this.volume.setUrl.replace("%s", volume);
 
-        this._httpRequest(url, "", "GET", function (error, response, body) {
+        this.requests.push(this._httpRequest(url, "", "GET", function (error, response, body) {
             if (error) {
                 this.log("setVolume() failed: %s", error.message);
                 callback(error);
@@ -130,7 +132,7 @@ module.exports = function (homebridge) {
 
                 callback(undefined, body);
             }
-        }.bind(this));
+        }.bind(this)));
     }
 
     _httpRequest(url, body, method, callback) {
@@ -147,4 +149,6 @@ module.exports = function (homebridge) {
         );
 
     }
-}
+};
+
+module.exports.VolumioAccessory;

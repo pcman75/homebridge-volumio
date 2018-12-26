@@ -1,35 +1,56 @@
-"use strict";
+var io=require('socket.io-client');
 
-// "accessories": [{"accessory": "VOLUMIO"}]
-
-let Service, Characteristic;
-let request = require("request");
-
-module.exports.VolumioAccessory;
+var Service, Characteristic;
 
 module.exports = function (homebridge) {
     console.log("Loading homebridge volumio. homebridge API version: " + homebridge.version);
     Service = homebridge.hap.Service;
     Characteristic = homebridge.hap.Characteristic;
     homebridge.registerAccessory("homebridge-volumio", "volumio", VolumioAccessory);
+};
+
+function VolumioAccessory(log, config) {
+    this.log = log;
+    this.name = config.name;
+    this.volumioUrl = "http://" + (config.name || "volumio").toLowerCase();
+    this.socket = io.connect(this.volumioUrl);
+    console.log('connecting to ' + this.volumioUrl);
+    this.play = false;
+
+    
+    //Report disconnection
+    this.socket.on('disconnect', function () {
+        console.log('Client Disconnected');
+    });
+
+    
 }
 
- class VolumioAccessory {
-    constructor(log, config) {
-        this.log = log;
-        this.name = config.name || "Volumio";
-        this.stateUrl = "http://" + this.name.toLowerCase() + ".local/api/v1/getstate";
+VolumioAccessory.prototype = {
 
-        this.volume = {};
-        this.mute = {};
+    volumioConnected: function() {
+        this.log('Client Connected');
+    },
 
-        let url0 = "http://" + this.name.toLowerCase() + ".local/api/v1/commands/?";
-        this.volume.setUrl = url0 + "cmd=volume&volume=%s";
-        this.mute.onUrl = url0 + "cmd=volume&volume=mute";
-        this.mute.offUrl = url0 + "cmd=volume&volume=unmute";
-    }
+    volumioStateChanged: function(data) {
+        this.log('Volumio state changed:');
+        this.log('status = ', data.status);
+        this.play = data.status == 'play';
+        this.log('play = ' + this.play);
+    },
 
-    getServices() {
+    identify: function (callback) {
+        this.log("Identify requested!");
+        callback();
+    },
+
+    getServices: function () {
+        //Report successful connection
+        this.socket.on('connect', this.volumioConnected.bind(this));
+        
+        //Notify on player state changes, this includes volume changes, songs etc
+        this.socket.on('pushState', this.volumioStateChanged.bind(this));
+
         this.log("Creating information!");
         var informationService = new Service.AccessoryInformation();
         informationService
@@ -46,54 +67,36 @@ module.exports = function (homebridge) {
             .on("get", this.getPlayState.bind(this))
             .on("set", this.setPlayState.bind(this));
 
+        /*
         this.log("... adding volume characteristic");
-        lightBulbService
-            .addCharacteristic(new Characteristic.Brightness())
+        speakerService
+            .addCharacteristic(new Characteristic.Volume())
             .on("get", this.getVolume.bind(this))
             .on("set", this.setVolume.bind(this));
+        */
         return [informationService, lightBulbService];
-    }
+    },
 
-    getPlayState(callback) {
-        this._httpRequest(this.stateUrl, "", "GET", function (error, response, body) {
-            if (error) {
-                this.log("getMuteState() failed: %s", error.message);
-                callback(error);
-            }
-            else if (response.statusCode !== 200) {
-                this.log("getMuteState() request returned http error: %s", response.statusCode);
-                callback(new Error("getMuteState() returned http error " + response.statusCode));
-            }
-            else {
-                let obj = JSON.parse(body);
-                let muted = (obj.status == 'play');
-                this.log("Speaker status is currently %s", muted ? "play" : "not play");
-                callback(null, muted);
-            }
-        }.bind(this));
-    }
+    getPlayState: function (callback) {
+        this.log("getPlayState() called");
+        callback(null, this.play);
+    },
 
-    setPlayState(muted, callback) {
-        let url = muted ? this.mute.onUrl : this.mute.offUrl;
+    setPlayState: function (play, callback) {
+        this.log("setPlayState() called");
+        this.log(play);
+        this.play = play;
 
-        this._httpRequest(url, "", "GET", function (error, response, body) {
-            if (error) {
-                this.log("setPlayState() failed: %s", error.message);
-                callback(error);
-            }
-            else if (response.statusCode !== 200) {
-                this.log("setMuteState() request returned http error: %s", response.statusCode);
-                callback(new Error("setMuteState() returned http error " + response.statusCode));
-            }
-            else {
-                this.log("setPlayState() successfully set mute state to %s", muted ? "play" : "stop");
+        if(play)
+            this.socket.emit('play');
+        else
+            this.socket.emit('stop');
 
-                callback(undefined, body);
-            }
-        }.bind(this));
-    }
+        callback();
+    },
 
-    getVolume(callback) {
+    /*
+    getVolume: function (callback) {
         this._httpRequest(this.stateUrl, "", "GET", function (error, response, body) {
             if (error) {
                 this.log("getVolume() failed: %s", error.message);
@@ -111,9 +114,9 @@ module.exports = function (homebridge) {
                 callback(null, volume);
             }
         }.bind(this));
-    }
+    },
 
-    setVolume(volume, callback) {
+    setVolume: function (volume, callback) {
         let url = this.volume.setUrl.replace("%s", volume);
 
         this._httpRequest(url, "", "GET", function (error, response, body) {
@@ -131,10 +134,10 @@ module.exports = function (homebridge) {
                 callback(undefined, body);
             }
         }.bind(this));
-    }
-
-    _httpRequest(url, body, method, callback) {
-        return request(
+    },
+    */
+    _httpRequest: function (url, body, method, callback) {
+        request(
             {
                 url: url,
                 body: body,
@@ -144,7 +147,6 @@ module.exports = function (homebridge) {
             function (error, response, body) {
                 callback(error, response, body);
             }
-        );
-
+        )
     }
-}
+};
