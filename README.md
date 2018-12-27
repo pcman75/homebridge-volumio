@@ -1,4 +1,4 @@
-# Homebridge Plugin 1.0.0
+# Homebridge Plugin
 
 With this plugin you can create HomeKit service for [Volumio](https://volumio.org/).
 
