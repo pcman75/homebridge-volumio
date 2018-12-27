@@ -2,12 +2,13 @@
     "bridge": {
         "name": "Homebridge",
         "username": "CC:22:3D:E3:83:61",
-        "pin": "031-48-361"
+        "pin": "031-48-361",
+        "comment": "Launch home bridge using homebridge -U ./ -P ./"
     },
     "accessories": [
         {
             "accessory": "volumio",
-            "server": "living",
+            "server": "http://living.local",
             "name": "living speaker"
         }
     ]

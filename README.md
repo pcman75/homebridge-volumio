@@ -13,9 +13,8 @@ Follow the instructions to install homebridge [HomeBridge Repo](https://github.c
 To install the `homebridge-volumio` plugin, run `sudo npm install -g homebridge-volumio`
 
 ### Configuration
-
-Example configuration
-
+The plugin is configured as part of your Homebridge config.json file.
+Example addition to existing config.json:
 ```
     "accessories": [
         {
@@ -37,4 +36,4 @@ Example:
 ```
 
 ### Thanks
-[Plugin inspired from [ygageot/homebridge-volumio](https://github.com/ygageot/homebridge-volumio)
+Plugin inspired from [ygageot/homebridge-volumio](https://github.com/ygageot/homebridge-volumio)

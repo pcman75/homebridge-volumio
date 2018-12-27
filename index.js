@@ -15,23 +15,26 @@ module.exports = function (homebridge) {
  class VolumioAccessory {
     constructor(log, config) {
         this.log = log;
-        this.name = (config.name || "Volumio").toLowerCase();
-        this.stateUrl = "http://" + this.name + ".local/api/v1/getstate";
-        this.playCommandUrl = "http://" + this.name + ".local/api/v1/commands/?cmd=play";
-        this.stopCommandUrl = "http://" + this.name + ".local/api/v1/commands/?cmd=stop";
-        this.volumeCommandUrl = "http://" + this.name + ".local/api/v1/commands/?cmd=volume&volume=";
+        this.name = config.name;
+        let serverName = (config.server || "http://volumio.local").toLowerCase();
+        this.stateUrl = serverName + "/api/v1/getstate";
+        this.playCommandUrl = serverName + "/api/v1/commands/?cmd=play";
+        this.stopCommandUrl = serverName + "/api/v1/commands/?cmd=stop";
+        this.volumeCommandUrl = serverName + "/api/v1/commands/?cmd=volume&volume=";
+
+        this.log("stateUrl = " + this.stateUrl);
     }
 
     getServices() {
         this.log("Creating information!");
         var informationService = new Service.AccessoryInformation();
         informationService
-            .setCharacteristic(Characteristic.Manufacturer, "Volumio.org")
-            .setCharacteristic(Characteristic.Model, "Volumio")
-            .setCharacteristic(Characteristic.SerialNumber, "0-0-0");
+            .setCharacteristic(Characteristic.Manufacturer, "volumio.org")
+            .setCharacteristic(Characteristic.Model, "volumio")
+            .setCharacteristic(Characteristic.SerialNumber, "1-2-3");
 
         this.log("Creating Lightbulb");
-        var lightBulbService = new Service.Lightbulb("volumio living");
+        var lightBulbService = new Service.Lightbulb(this.name);
 
         this.log("... configuring On characteristic");
         lightBulbService
@@ -59,7 +62,6 @@ module.exports = function (homebridge) {
                 callback(new Error("getMuteState() returned http error " + response.statusCode));
             }
             else {
-                this.log("getPlayState()" + body.status);
                 callback(null, body.status === 'play');
             }
         });
@@ -79,7 +81,7 @@ module.exports = function (homebridge) {
             }
             else {
                 this.log("setPlayState() successfully: ", body.response);
-                callback(undefined, body);
+                callback(null);
             }
         });
     }
@@ -97,7 +99,7 @@ module.exports = function (homebridge) {
             else {
                 this.log("Volume is at  %s %", body.volume);
 
-                callback(null, body.volume);
+                callback(null, Number(body.volume));
             }
         });
     }
@@ -116,7 +118,7 @@ module.exports = function (homebridge) {
             }
             else {
                 this.log("setVolume() successfully set volume to " + volume);
-                callback(undefined, volume);
+                callback(null);
             }
         });
     }

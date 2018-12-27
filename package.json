@@ -14,7 +14,8 @@
     "url": "https://github.com/pcman75/homebridge-volumio/issues"
   },
   "engines": {
-    "node": ">=8.9.1"
+    "node": ">=8.9.1",
+    "homebridge": ">=0.4.45"
   },
   "homepage": "https://github.com/pcman75/homebridge-volumio#readme",
   "main": "index.js",
