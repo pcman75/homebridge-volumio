@@ -7,7 +7,8 @@
     "accessories": [
         {
             "accessory": "volumio",
-            "name": "living"
+            "server": "living",
+            "name": "living speaker"
         }
     ]
 }

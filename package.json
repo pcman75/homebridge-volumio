@@ -1,6 +1,6 @@
 {
   "name": "homebridge-volumio",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "Volumio plugin for homebridge: https://github.com/nfarina/homebridge",
   "license": "GPL-3.0-only",
   "keywords": [
@@ -8,17 +8,18 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/pcman75/homebridge-volumio.git"
+    "url": "git+https://github.com/pcman75/homebridge-volumio.git"
   },
   "bugs": {
     "url": "https://github.com/pcman75/homebridge-volumio/issues"
   },
   "engines": {
-    "node": ">=0.12.0",
-    "homebridge": ">=0.2.0"
+    "node": ">=8.9.1"
   },
+  "homepage": "https://github.com/pcman75/homebridge-volumio#readme",
+  "main": "index.js",
   "dependencies": {
-    "request": "^2.88.0",
-    "socket.io-client": "^2.2.0"
-  }
+    "request": "^2.88.0"
+  },
+  "author": "Cosmin Manoliu"
 }
