@@ -28,11 +28,12 @@ If your volumio server name is different than the default 'volumio', specify it 
 Example:
 ```
     "accessories": [
-    {
-        "accessory": "volumio",
-        "name": "living speakers",
-        "server": "http://living.local"
-    }
+        {
+            "accessory": "volumio",
+            "name": "living speakers",
+            "server": "http://living.local"
+        }
+    ]
 ```
 
 ### Thanks
