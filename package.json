@@ -1,6 +1,6 @@
 {
   "name": "homebridge-volumio",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Volumio plugin for homebridge: https://github.com/nfarina/homebridge",
   "license": "GPL-3.0-only",
   "keywords": [
